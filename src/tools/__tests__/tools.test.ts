@@ -120,7 +120,7 @@ describe("devtools_getFleetStatus happy path", () => {
       "fetch",
       makeFetchMock({
         "registry.json": REGISTRY_FIXTURE,
-        "VERSION": VERSION_FIXTURE,
+        "STANDARDS_VERSION": VERSION_FIXTURE,
         "releases/latest": JSON.stringify({ tag_name: "v1.0.0" }),
       }),
     );
@@ -142,13 +142,13 @@ describe("devtools_getFleetStatus happy path", () => {
 });
 
 describe("devtools_checkDrift happy path", () => {
-  it("returns summary with metaVersion and results array", async () => {
+  it("returns summary with standardsVersion and results array", async () => {
     vi.stubGlobal(
       "fetch",
       makeFetchMock({
         "drift-checker.config.json": DRIFT_CONFIG_FIXTURE,
         "registry.json": REGISTRY_FIXTURE,
-        "VERSION": VERSION_FIXTURE,
+        "STANDARDS_VERSION": VERSION_FIXTURE,
         "CLAUDE.md": CLAUDE_MD_FIXTURE,
         "contents/.github/workflows": JSON.stringify([
           { name: "drift-check.yml", type: "file" },
@@ -169,7 +169,7 @@ describe("devtools_checkDrift happy path", () => {
     const result = await tool.handler({ slug: "steam-mcp", verbose: false });
     expect(result.isError).toBeUndefined();
     const parsed = JSON.parse(result.content[0].text);
-    expect(parsed).toHaveProperty("metaVersion");
+    expect(parsed).toHaveProperty("standardsVersion");
     expect(parsed).toHaveProperty("results");
   });
 });
