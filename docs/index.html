@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Tools MCP</title>
+  <style>
+    :root {
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+      --accent-glow: rgba(124, 58, 237, 0.15);
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1c2128;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--bg-code);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.7;
+    }
+    pre code { background: none; border: none; padding: 0; font-size: inherit; }
+    h1, h2, h3, h4 { line-height: 1.3; font-weight: 600; }
+    h2 { font-size: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.15rem; margin-bottom: 0.75rem; color: var(--accent-light); }
+    p { margin-bottom: 1rem; }
+    ul { margin: 0.5rem 0 1rem 1.25rem; }
+    li { margin-bottom: 0.35rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1rem; }
+    th { text-align: left; padding: 0.6rem 0.75rem; background: var(--bg-code); border: 1px solid var(--border); color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    td { padding: 0.6rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+    /* Layout */
+    .site-header {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .header-logo { font-weight: 700; font-size: 1rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+    .header-logo span { color: var(--accent-light); }
+    .header-links { display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent-light);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 1.5rem 3.5rem;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .hero h1 span { color: var(--accent-light); }
+    .hero .tagline { font-size: 1.15rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem; }
+    .hero-badges { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .stat-badge {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .stat-badge .num { display: block; font-size: 1.4rem; color: var(--accent-light); line-height: 1.2; }
+    .hero-actions { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #6d28d9; text-decoration: none; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--bg-card); text-decoration: none; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    section { margin-bottom: 3rem; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .tool-name {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent-light);
+    }
+    .tool-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tag-read { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+    .tag-write { background: rgba(124, 58, 237, 0.15); color: var(--accent-light); border: 1px solid rgba(124, 58, 237, 0.3); }
+    .tag-dryrun { background: rgba(210, 153, 34, 0.15); color: var(--yellow); border: 1px solid rgba(210, 153, 34, 0.3); }
+    .tag-irreversible { background: rgba(248, 81, 73, 0.15); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.3); }
+
+    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 720px) { .section-grid { grid-template-columns: 1fr; } }
+
+    .callout {
+      display: flex;
+      gap: 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .callout.warn { border-left-color: var(--yellow); }
+    .callout.danger { border-left-color: var(--red); }
+    .callout p { margin: 0; }
+
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.875rem;
+      padding: 0.6rem 1rem;
+      font-family: inherit;
+      margin-bottom: -1px;
+    }
+    .tab-btn.active { color: var(--accent-light); border-bottom-color: var(--accent-light); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .env-table td:first-child code { white-space: nowrap; }
+    .required { color: var(--red); font-size: 0.75rem; font-weight: 600; }
+    .recommended { color: var(--yellow); font-size: 0.75rem; font-weight: 600; }
+    .optional-label { color: var(--text-muted); font-size: 0.75rem; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+
+    .param-required { color: var(--red); }
+    .param-optional { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">Developer Tools <span>MCP</span></div>
+    <nav class="header-links">
+      <a href="#tools">Tools</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="#env">Env Vars</a>
+      <a href="https://github.com/TMHSDigital/Developer-Tools-MCP" class="btn btn-ghost" style="padding:0.3rem 0.8rem;font-size:0.8rem;">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="badge-pill" style="margin-bottom:1rem;">v0.2.0</div>
+  <h1>Developer Tools <span>MCP</span></h1>
+  <p class="tagline">MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable tools. Read and write the fleet from any MCP-enabled agent.</p>
+  <div class="hero-badges">
+    <div class="stat-badge"><span class="num">4</span>Read tools</div>
+    <div class="stat-badge"><span class="num">3</span>Write tools</div>
+    <div class="stat-badge"><span class="num">0</span>Auth needed for reads</div>
+    <div class="stat-badge"><span class="num">5 min</span>Cache TTL</div>
+  </div>
+  <div class="hero-actions">
+    <a href="#quickstart" class="btn btn-primary">Quick Start</a>
+    <a href="https://github.com/TMHSDigital/Developer-Tools-MCP" class="btn btn-ghost">View on GitHub</a>
+  </div>
+</section>
+
+<main>
+
+  <!-- Quick Start -->
+  <section id="quickstart">
+    <h2>Quick Start</h2>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(event,'qs','npx')">npx</button>
+      <button class="tab-btn" onclick="switchTab(event,'qs','source')">From source</button>
+      <button class="tab-btn" onclick="switchTab(event,'qs','config')">MCP client config</button>
+    </div>
+    <div id="qs-npx" class="tab-panel active">
+      <pre><code>GH_TOKEN=your_token npx @tmhs/devtools-mcp</code></pre>
+      <p style="color:var(--text-muted);font-size:0.875rem;">No install required. Pulls the latest published version. <code>GH_TOKEN</code> is optional for read tools against public repos.</p>
+    </div>
+    <div id="qs-source" class="tab-panel">
+      <pre><code>git clone https://github.com/TMHSDigital/Developer-Tools-MCP.git
+cd Developer-Tools-MCP
+npm install
+npm run build
+GH_TOKEN=your_token node dist/index.js</code></pre>
+    </div>
+    <div id="qs-config" class="tab-panel">
+      <p style="color:var(--text-muted);font-size:0.875rem;">Add to your Claude Desktop, Cursor, or other MCP client config:</p>
+      <pre><code>{
+  "mcpServers": {
+    "devtools": {
+      "command": "npx",
+      "args": ["@tmhs/devtools-mcp"],
+      "env": {
+        "GH_TOKEN": "your_token_here",
+        "DEVTOOLS_META_ROOT": "/path/to/Developer-Tools-Directory"
+      }
+    }
+  }
+}</code></pre>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin-top:0.75rem;"><code>DEVTOOLS_META_ROOT</code> is only required for write tools (<code>restampRepo</code>, <code>syncRegistry</code>, <code>createTool</code>).</p>
+    </div>
+  </section>
+
+  <!-- Tools -->
+  <section id="tools">
+    <h2>Tools</h2>
+
+    <h3>Read Tools &mdash; no token required for public repos</h3>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_getRegistry</span>
+        <span class="tool-tag tag-read">Read</span>
+      </div>
+      <p>Return entries from <code>registry.json</code> with optional filtering. Use this to enumerate the ecosystem or look up a specific tool.</p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>type</code></td><td>string</td><td>all</td><td>Filter by <code>cursor-plugin</code> or <code>mcp-server</code></td></tr>
+          <tr><td><code>status</code></td><td>string</td><td>all</td><td>Filter by lifecycle status: <code>experimental</code>, <code>beta</code>, <code>active</code>, <code>maintenance</code>, <code>deprecated</code>, <code>archived</code></td></tr>
+          <tr><td><code>slug</code></td><td>string</td><td>&mdash;</td><td>Return a single entry by its registry slug</td></tr>
+        </tbody>
+      </table>
+      <p style="margin:0;color:var(--text-muted);font-size:0.875rem;">All parameters are optional. Called with no arguments, returns every entry in the registry.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_getFleetStatus</span>
+        <span class="tool-tag tag-read">Read</span>
+      </div>
+      <p>List all repos with their registry version, latest GitHub release tag, and a version-signal field showing whether each repo is <code>current</code>, <code>behind</code>, or <code>ahead</code> of the fleet standards version.</p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>include_standards_version</code></td><td>boolean</td><td>true</td><td>Include the meta-repo <code>STANDARDS_VERSION</code> in the response envelope</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_checkDrift</span>
+        <span class="tool-tag tag-read">Read</span>
+      </div>
+      <p>Return drift findings for one or all repos: standards-version mismatches and missing required workflows. Fetches the drift policy from <code>standards/drift-checker.config.json</code> in the meta-repo at runtime, so it always uses the current policy without a local clone.</p>
+      <div class="callout" style="margin-top:0.5rem;">
+        <p>The canonical drift checker (<code>scripts/drift_check/cli.py</code>) is authoritative. This tool is a convenience reader for agents that cannot run Python locally. For write operations on drift, use <code>devtools_restampRepo</code>.</p>
+      </div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>slug</code></td><td>string</td><td>all repos</td><td>Check a single repo instead of the full fleet</td></tr>
+          <tr><td><code>verbose</code></td><td>boolean</td><td>false</td><td>Include per-file details alongside the summary</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_inspectRepo</span>
+        <span class="tool-tag tag-read">Read</span>
+      </div>
+      <p>Detailed view of a single repo: GitHub metadata, open PRs, recent CI workflow runs, and the standards-version marker read from <code>CLAUDE.md</code>.</p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>slug</code></td><td>string</td><td><span class="param-required">required</span></td><td>Registry slug of the repo to inspect (e.g. <code>steam-mcp</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:2rem;">Write Tools &mdash; require <code>DEVTOOLS_META_ROOT</code> and <code>GH_TOKEN</code></h3>
+    <div class="callout warn">
+      <div>
+        <strong>Dry-run by default.</strong> All write tools default to <code>apply=false</code>. No network mutations happen without an explicit <code>apply: true</code>. Always verify the dry-run output before applying.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_restampRepo</span>
+        <span class="tool-tag tag-write">Write</span>
+        <span class="tool-tag tag-dryrun">Dry-run safe</span>
+      </div>
+      <p>Preview or apply a standards-version restamp across fleet repos. Dry-run delegates to the canonical Python drift checker to discover which files need stamping. Apply creates per-repo branches, commits via the GitHub API, opens PRs, and squash-merges each one when CI passes.</p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>slug</code></td><td>string</td><td>all repos</td><td>Restamp only this repo instead of the full fleet</td></tr>
+          <tr><td><code>version</code></td><td>string</td><td>meta-repo STANDARDS_VERSION</td><td>Target standards version to stamp (default reads the current version from the meta-repo)</td></tr>
+          <tr><td><code>apply</code></td><td>boolean</td><td><code>false</code></td><td>Set <code>true</code> to open real PRs and merge them</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin:0;">Dry-run output: list of repos with drifted files and the planned stamp value. Apply output: per-repo PR numbers and merge status.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_syncRegistry</span>
+        <span class="tool-tag tag-write">Write</span>
+        <span class="tool-tag tag-dryrun">Dry-run safe</span>
+      </div>
+      <p>Preview or apply <code>registry.json</code> field edits and regenerate all derived artifacts (README.md, CLAUDE.md, docs/index.html). Apply opens a meta-repo PR that is squash-merged when CI passes.</p>
+      <div class="callout warn" style="margin-bottom:1rem;">
+        <p><strong>Update-only boundary.</strong> This tool rejects slugs that are not already in <code>registry.json</code>. To add a new entry, use <code>devtools_createTool</code>.</p>
+      </div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>edit</code></td><td>object</td><td>&mdash;</td><td>Map of <code>{ slug: { field: value, ... } }</code> describing the edits to apply. Omit to run a no-op dry-run that verifies the registry is in sync.</td></tr>
+          <tr><td><code>apply</code></td><td>boolean</td><td><code>false</code></td><td>Set <code>true</code> to write edits to disk, regenerate artifacts, and open a meta-repo PR</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin:0.5rem 0 0;">Example edit: <code>{ "steam-mcp": { "status": "active", "version": "1.1.0" } }</code></p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="tool-name">devtools_createTool</span>
+        <span class="tool-tag tag-write">Write</span>
+        <span class="tool-tag tag-irreversible">Irreversible on apply</span>
+      </div>
+      <p>Plan or execute creation of a new ecosystem tool repo. Dry-run scaffolds the full file tree to a temp directory, reports the 22-file plan and the would-be registry entry, then cleans up. Apply creates a real public GitHub repo.</p>
+      <div class="callout danger" style="margin-bottom:1rem;">
+        <p><strong>Double-confirm guard.</strong> <code>apply=true</code> alone is refused. You must also pass <code>confirm=true</code>. The <code>gh repo create</code> step creates a live public repo and cannot be undone. Read the dry-run output carefully before confirming.</p>
+      </div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>string</td><td><span class="param-required">required</span></td><td>Human-readable tool name (e.g. <code>My Cursor Plugin</code>)</td></tr>
+          <tr><td><code>slug</code></td><td>string</td><td>auto-derived</td><td>URL-safe identifier. Defaults to a kebab-case slug derived from <code>name</code>.</td></tr>
+          <tr><td><code>type</code></td><td>string</td><td><code>cursor-plugin</code></td><td><code>cursor-plugin</code> or <code>mcp-server</code></td></tr>
+          <tr><td><code>description</code></td><td>string</td><td><span class="param-required">required</span></td><td>One-sentence description used in the registry and scaffold README</td></tr>
+          <tr><td><code>license</code></td><td>string</td><td><code>cc-by-nc-nd-4.0</code></td><td>SPDX license identifier</td></tr>
+          <tr><td><code>apply</code></td><td>boolean</td><td><code>false</code></td><td>Set <code>true</code> to execute creation (requires <code>confirm=true</code>)</td></tr>
+          <tr><td><code>confirm</code></td><td>boolean</td><td><code>false</code></td><td>Safety gate: must be <code>true</code> alongside <code>apply=true</code> to proceed</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin:0.5rem 0 0;">Apply steps: create public GitHub repo, scaffold 22 files, git init + push, apply branch protection, open meta-repo PR to register the new entry.</p>
+    </div>
+  </section>
+
+  <!-- Environment Variables -->
+  <section id="env">
+    <h2>Environment Variables</h2>
+    <table class="env-table">
+      <thead>
+        <tr><th>Variable</th><th>Status</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>GH_TOKEN</code></td>
+          <td><span class="recommended">Strongly recommended</span></td>
+          <td>GitHub personal access token. No scopes required for read tools against public repos. Without it, GitHub limits unauthenticated requests to 60 per hour per IP. A single full fleet call fans out to 20-30 requests. Required for all write tools.</td>
+        </tr>
+        <tr>
+          <td><code>GITHUB_TOKEN</code></td>
+          <td><span class="optional-label">Alternative</span></td>
+          <td>Accepted as a fallback if <code>GH_TOKEN</code> is not set.</td>
+        </tr>
+        <tr>
+          <td><code>DEVTOOLS_META_ROOT</code></td>
+          <td><span class="required">Required for write tools</span></td>
+          <td>Absolute path to a local <code>Developer-Tools-Directory</code> checkout. When set, <code>registry.json</code>, <code>STANDARDS_VERSION</code>, and the drift config are read from disk instead of GitHub. Required for all write tools: <code>restampRepo</code>, <code>syncRegistry</code>, <code>createTool</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.875rem;color:var(--text-muted);">Copy <code>.env.example</code> to <code>.env</code> and fill in <code>GH_TOKEN</code> before running locally.</p>
+  </section>
+
+  <!-- Safety Posture -->
+  <section id="safety">
+    <h2>Safety Posture</h2>
+    <div class="two-col">
+      <div>
+        <h3>Network safety</h3>
+        <ul>
+          <li>Write tools default to <code>apply=false</code>. No network mutations without explicit opt-in.</li>
+          <li><code>createTool apply</code> requires both <code>apply=true</code> AND <code>confirm=true</code> plus a token with repo-creation scope.</li>
+          <li>No secrets are committed. Tokens come from environment variables only.</li>
+          <li>Rate-limit errors name <code>GH_TOKEN</code> with instructions on how to obtain one.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Data safety</h3>
+        <ul>
+          <li>No hardcoded paths. All GitHub reads use the public API or raw content URLs.</li>
+          <li>All GitHub API and raw file responses are cached in memory with a 5-minute TTL.</li>
+          <li><code>devtools_syncRegistry</code> is update-only; it cannot add new entries to the registry.</li>
+          <li><code>devtools_createTool</code> dry-run scaffolds to a temp directory and cleans up; it never writes to the working tree.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Development -->
+  <section id="dev">
+    <h2>Development</h2>
+    <pre><code>npm install
+npm run build
+npm test</code></pre>
+    <p>Tests use vitest with mocked fetch responses. No live API calls are made in CI. See <a href="https://github.com/TMHSDigital/Developer-Tools-MCP/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for guidelines.</p>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <a href="https://github.com/TMHSDigital/Developer-Tools-MCP">Developer Tools MCP</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/TMHSDigital/Developer-Tools-MCP/blob/main/CHANGELOG.md">Changelog</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/TMHSDigital/Developer-Tools-Directory">Developer Tools Directory</a>
+    &nbsp;&middot;&nbsp;
+    CC-BY-NC-ND-4.0
+  </p>
+</footer>
+
+<script>
+  function switchTab(e, group, name) {
+    var buttons = e.target.parentElement.querySelectorAll('.tab-btn');
+    buttons.forEach(function(b) { b.classList.remove('active'); });
+    e.target.classList.add('active');
+    var section = e.target.closest('section');
+    section.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById(group + '-' + name);
+    if (panel) panel.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

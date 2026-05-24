@@ -116,14 +116,16 @@ jobs:
               )
               with open(readme, 'w') as f:
                   f.write(content)
-          "
 
-      - name: Sync release docs
-        if: steps.check.outputs.skip == 'false'
-        uses: TMHSDigital/Developer-Tools-Directory/.github/actions/release-doc-sync@v1
-        with:
-          plugin-version: ${{ steps.new.outputs.version }}
-          previous-version: ${{ steps.current.outputs.version }}
+          pkg = 'package.json'
+          if os.path.exists(pkg):
+              with open(pkg) as f:
+                  data = json.load(f)
+              data['version'] = new_version
+              with open(pkg, 'w') as f:
+                  json.dump(data, f, indent=2)
+                  f.write('\n')
+          "
 
       - name: Commit version bump to branch and open PR
         id: pr

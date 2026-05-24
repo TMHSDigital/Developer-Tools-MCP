@@ -1,9 +1,9 @@
 # Developer Tools MCP
 
-MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable read tools.
+MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable tools.
 
 ![License: CC-BY-NC-ND-4.0](https://img.shields.io/badge/license-CC--BY--NC--ND--4.0-green)
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 
 **v0.2.0 adds a write surface.** Three write tools ship alongside the four read tools. All write tools default to dry-run and require `DEVTOOLS_META_ROOT` and `GH_TOKEN`. The write surface is now complete; see [ROADMAP.md](ROADMAP.md).
 

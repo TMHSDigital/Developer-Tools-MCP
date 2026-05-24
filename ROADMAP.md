@@ -2,7 +2,7 @@
 
 # Roadmap
 
-**Current:** v0.1.0
+**Current:** v0.2.0
 
 ## v0.1.0 - Read-Only Core (shipped)
 
