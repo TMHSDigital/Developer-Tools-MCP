@@ -5,13 +5,13 @@ MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable 
 ![License: CC-BY-NC-ND-4.0](https://img.shields.io/badge/license-CC--BY--NC--ND--4.0-green)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 
-**v1 is read-only.** No write operations, no secrets, no tokens committed. The write roadmap is documented in [ROADMAP.md](ROADMAP.md).
+**v0.2.0 adds a write surface.** Three write tools ship alongside the four read tools. All write tools default to dry-run and require `DEVTOOLS_META_ROOT` and `GH_TOKEN`. The write surface is now complete; see [ROADMAP.md](ROADMAP.md).
 
 ---
 
 ## What it does
 
-This server gives any MCP-capable agent four read tools against the ecosystem:
+### Read tools (no token needed for public repos)
 
 | Tool | Description |
 |------|-------------|
@@ -20,7 +20,19 @@ This server gives any MCP-capable agent four read tools against the ecosystem:
 | `devtools_checkDrift` | Return drift findings: standards-version mismatches and missing required workflows |
 | `devtools_inspectRepo` | Detailed view of one repo: GitHub metadata, open PRs, CI run status, standards-version |
 
-`devtools_checkDrift` fetches `standards/drift-checker.config.json` from the meta-repo at runtime and applies its thresholds and required-workflow lists. The canonical drift checker (`scripts/drift_check/cli.py` in the meta-repo) is authoritative; this tool is a convenience reader for agents that cannot run Python locally.
+`devtools_checkDrift` fetches `standards/drift-checker.config.json` from the meta-repo at runtime. The canonical drift checker (`scripts/drift_check/cli.py`) is authoritative; this tool is a convenience reader for agents that cannot run Python locally.
+
+### Write tools (dry-run by default; require `DEVTOOLS_META_ROOT` and `GH_TOKEN`)
+
+| Tool | Description |
+|------|-------------|
+| `devtools_restampRepo` | Preview or apply a standards-version restamp across fleet repos. Dry-run calls the canonical drift checker to discover drifted files; apply stamps via the Phase 1 Python scripts, branches, PRs, and squash-merges. |
+| `devtools_syncRegistry` | Preview or apply `registry.json` field edits and regenerate derived artifacts (README, CLAUDE.md, docs/index.html). Update-only: rejects slugs not in `registry.json`. Apply runs `sync_from_registry.py`, verifies with `--check`, and opens a meta-repo PR. |
+| `devtools_createTool` | Plan or execute creation of a new ecosystem tool repo. Dry-run validates inputs, runs `scaffold/create-tool.py` to a temp dir, lists generated files, and reports the would-be registry entry and `STANDARDS_VERSION`. Apply creates a real public GitHub repo (IRREVERSIBLE; requires `confirm=true` and a token with repo-creation scope), scaffolds and bootstraps it, applies branch protection, and registers it via a meta-repo PR. |
+
+**Boundary rule:** `devtools_syncRegistry` only updates existing entries. `devtools_createTool` is the only tool that can add a new entry.
+
+**createTool apply guard:** Setting `apply=true` without `confirm=true` is refused. The `gh repo create` step creates a live public repo and cannot be undone.
 
 ---
 
@@ -68,7 +80,7 @@ Add to your MCP client config:
 |----------|----------|-------------|
 | `GH_TOKEN` | Strongly recommended | GitHub personal access token. No scopes required for public repos. Without it, GitHub limits unauthenticated requests to 60 per hour per IP. A single full fleet call fans out to 20-30 requests. |
 | `GITHUB_TOKEN` | Alternative | Accepted as a fallback if `GH_TOKEN` is not set. |
-| `DEVTOOLS_META_ROOT` | Optional | Absolute path to a local `Developer-Tools-Directory` checkout. When set, `registry.json`, `VERSION`, and the drift config are read from disk instead of GitHub. Useful for offline operation. |
+| `DEVTOOLS_META_ROOT` | Required for write tools | Absolute path to a local `Developer-Tools-Directory` checkout. When set, `registry.json`, `VERSION`, and the drift config are read from disk instead of GitHub. Required for all write tools (`restampRepo`, `syncRegistry`, `createTool`). |
 
 Copy `.env.example` to `.env` and fill in `GH_TOKEN` before running locally.
 
@@ -82,7 +94,8 @@ All GitHub API and raw file responses are cached in memory with a 5-minute TTL. 
 
 ## Public safety posture
 
-- Read-only. No tool modifies any repo, file, or GitHub resource.
+- Write tools default to dry-run (`apply=false`). No network mutations without explicit opt-in.
+- `createTool apply` requires both `apply=true` AND `confirm=true` plus a token with repo-creation scope.
 - No secrets are committed. Tokens come from environment variables only.
 - No hardcoded paths. All GitHub reads use the public API or raw content URLs.
 - Rate-limit errors name `GH_TOKEN` and link to how to get one.

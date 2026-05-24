@@ -11,23 +11,17 @@
 - `devtools_checkDrift` reads drift policy from the meta-repo at runtime
 - Tests for all tools wired into CI
 
-## v0.2.0 - Write Surface (in progress)
+## v0.2.0 - Write Surface (COMPLETE)
 
-Token-gated tools that default to dry-run. Requires `DEVTOOLS_META_ROOT` (local meta-repo clone) and `GH_TOKEN`.
+Token-gated tools that default to dry-run. All require `DEVTOOLS_META_ROOT` (local meta-repo clone) and `GH_TOKEN`.
 
-**Shipped:**
+| Tool | Status | Description |
+|------|--------|-------------|
+| `devtools_restampRepo` | Shipped | Discover and apply standards-version restamps. Dry-run calls canonical drift checker; apply stamps files via Phase 1 Python scripts, branches, PRs, and squash-merges. |
+| `devtools_syncRegistry` | Shipped | Preview or apply `registry.json` field edits and regenerate derived artifacts. Update-only boundary; opens meta-repo PR on apply. |
+| `devtools_createTool` | Shipped | Plan or execute a new ecosystem tool repo. Dry-run proves scaffold and reports the full plan. Apply creates a real public repo (confirm-gated), bootstraps, protects, and registers it. |
 
-| Tool | Description |
-|------|-------------|
-| `devtools_restampRepo` | Discover and apply standards-version restamps. Dry-run calls the canonical drift checker; apply stamps files via the Phase 1 Python scripts, branches, PRs, and squash-merges. |
-
-**Planned:**
-
-| Tool (planned) | Description |
-|----------------|-------------|
-| `devtools_createTool` | Invoke the scaffold generator to produce a new tool repo from a name, description, and type. Requires a GitHub token with repo-creation scope. Dry-run by default. |
-| `devtools_syncRegistry` | Run the equivalent of `sync_from_registry.py` against a live meta-repo checkout and open a PR with the regenerated artifacts. Requires a token with push scope on the meta-repo. Dry-run by default. |
-| `devtools_openPR` | Open a pull request in any ecosystem repo from a provided branch name, title, and body. Requires a token with pull-request scope. Dry-run by default. |
+The write surface is complete. v0.2.0 ships these three tools alongside the four read tools from v0.1.0.
 
 ## v1.0.0 - Stable
 
