@@ -1,6 +1,6 @@
 {
   "name": "@tmhs/devtools-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable read tools.",
   "type": "module",
   "main": "dist/index.js",
