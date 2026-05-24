@@ -1,4 +1,4 @@
-<!-- standards-version: 1.10.0 -->
+<!-- standards-version: 1.11.0 -->
 
 # AGENTS.md
 
