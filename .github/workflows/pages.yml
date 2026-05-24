@@ -4,11 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "skills/**"
-      - "rules/**"
-      - "mcp-tools.json"
-      - "site.json"
-      - ".cursor-plugin/plugin.json"
+      - "docs/**"
       - "assets/**"
   workflow_dispatch:
 
@@ -21,30 +17,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Checkout site template
-        uses: actions/checkout@v6
-        with:
-          repository: TMHSDigital/Developer-Tools-Directory
-          sparse-checkout: site-template
-          path: _template
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - run: pip install Jinja2
-
-      - name: Build site
-        run: python _template/site-template/build_site.py --repo-root . --out docs
 
       - uses: actions/configure-pages@v6
 
