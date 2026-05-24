@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   fetchRegistry,
-  fetchMetaVersion,
+  fetchStandardsVersion,
   rawFetch,
   githubFetch,
   extractStandardsVersion,
@@ -35,10 +35,10 @@ function parseSemver(v: string): [number, number, number] {
 function applySignalPolicy(
   policy: string,
   repoVersion: string,
-  metaVersion: string,
+  standardsVersion: string,
 ): Severity {
   const [rm, rn, rp] = parseSemver(repoVersion);
-  const [mm, mn, mp] = parseSemver(metaVersion);
+  const [mm, mn, mp] = parseSemver(standardsVersion);
 
   // Repo is ahead of meta - unexpected, surface as warning
   if (
@@ -92,14 +92,14 @@ export function register(server: McpServer): void {
     inputSchema,
     async ({ slug, verbose }) => {
       try {
-        const [configRaw, registry, metaVersion] = await Promise.all([
+        const [configRaw, registry, standardsVersion] = await Promise.all([
           rawFetch(
             "TMHSDigital",
             "Developer-Tools-Directory",
             "standards/drift-checker.config.json",
           ),
           fetchRegistry(),
-          fetchMetaVersion(),
+          fetchStandardsVersion(),
         ]);
 
         const config = JSON.parse(configRaw) as DriftConfig;
@@ -154,12 +154,12 @@ export function register(server: McpServer): void {
                   message: "standards-version marker not found in CLAUDE.md or AGENTS.md",
                 });
               } else {
-                const severity = applySignalPolicy(policy, standardsVersion, metaVersion);
+                const severity = applySignalPolicy(policy, standardsVersion, standardsVersion);
                 if (severity !== "ok") {
                   repoFindings.push({
                     check: "version-signal",
                     severity,
-                    message: `standards-version ${standardsVersion} vs meta ${metaVersion}`,
+                    message: `standards-version ${standardsVersion} vs meta ${standardsVersion}`,
                   });
                 }
               }
@@ -191,7 +191,7 @@ export function register(server: McpServer): void {
         }));
 
         const summary = {
-          metaVersion,
+          standardsVersion,
           signalPolicy: policy,
           checkedRepos: filtered.length,
           errors: filtered.flatMap((r) =>
