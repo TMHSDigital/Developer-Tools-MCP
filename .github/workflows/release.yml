@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: release
@@ -28,7 +29,6 @@ jobs:
         id: current
         run: |
           version=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
-
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Current version: $version"
 
@@ -125,18 +125,66 @@ jobs:
           plugin-version: ${{ steps.new.outputs.version }}
           previous-version: ${{ steps.current.outputs.version }}
 
-      - name: Commit version bump
+      - name: Commit version bump to branch and open PR
+        id: pr
         if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          new_version="${{ steps.new.outputs.version }}"
+          branch="chore/release-v${new_version}"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
           git add -A
+
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No version file changes to commit"
+            echo "no_changes=true" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore: bump version to ${{ steps.new.outputs.version }} [skip ci]"
-            git push origin main
+            git commit -m "chore: bump version to ${new_version} [skip ci]"
+            git push origin "$branch"
+
+            pr_num=$(gh pr create \
+              --base main \
+              --head "$branch" \
+              --title "chore: bump version to ${new_version} [skip ci]" \
+              --body "Automated version bump to ${new_version}." \
+              --json number --jq '.number')
+
+            echo "pr_num=$pr_num" >> "$GITHUB_OUTPUT"
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+            echo "no_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Opened PR #${pr_num} for version bump"
+
+            # Poll for required drift check (max 5 min)
+            for i in $(seq 1 30); do
+              sleep 10
+              state=$(gh pr view "$pr_num" \
+                --json statusCheckRollup \
+                --jq '[.statusCheckRollup[] | select(.name == "Ecosystem drift check")] | first | .conclusion // .status' \
+                2>/dev/null || echo "pending")
+              echo "Attempt $i: drift check state = $state"
+              if [ "$state" = "SUCCESS" ]; then
+                echo "Drift check passed"
+                break
+              elif [ "$state" = "FAILURE" ] || [ "$state" = "ERROR" ]; then
+                echo "::error::Drift check failed on version-bump PR #${pr_num}"
+                exit 1
+              fi
+            done
+
+            gh pr merge "$pr_num" --squash --delete-branch
+            echo "Merged PR #${pr_num}"
           fi
+
+      - name: Sync local git to merged main
+        if: steps.check.outputs.skip == 'false' && steps.pr.outputs.no_changes != 'true'
+        run: |
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
 
       - name: Create and push tags
         if: steps.check.outputs.skip == 'false'
