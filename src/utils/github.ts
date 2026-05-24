@@ -127,7 +127,7 @@ export async function fetchRegistry(): Promise<RegistryEntry[]> {
   return JSON.parse(raw) as RegistryEntry[];
 }
 
-export async function fetchMetaVersion(): Promise<string> {
-  const raw = await rawFetch(META_OWNER, META_REPO, "VERSION");
+export async function fetchStandardsVersion(): Promise<string> {
+  const raw = await rawFetch(META_OWNER, META_REPO, "STANDARDS_VERSION");
   return raw.trim();
 }

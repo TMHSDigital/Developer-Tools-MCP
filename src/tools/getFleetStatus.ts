@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   fetchRegistry,
-  fetchMetaVersion,
+  fetchStandardsVersion,
   rawFetch,
   githubFetch,
   extractStandardsVersion,
@@ -46,9 +46,9 @@ export function register(server: McpServer): void {
     inputSchema,
     async ({ include_standards_version }) => {
       try {
-        const [registry, metaVersion] = await Promise.all([
+        const [registry, metaStandardsVersion] = await Promise.all([
           fetchRegistry(),
-          fetchMetaVersion(),
+          fetchStandardsVersion(),
         ]);
 
         const results = await Promise.all(
@@ -83,7 +83,7 @@ export function register(server: McpServer): void {
               latestReleaseTag: latestTag,
               versionSignal: versionSignal(entry.version, latestTag),
               ...(include_standards_version
-                ? { standardsVersion, metaVersion }
+                ? { standardsVersion, metaStandardsVersion }
                 : {}),
             };
           }),
