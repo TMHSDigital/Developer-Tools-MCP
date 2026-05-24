@@ -146,6 +146,7 @@ jobs:
             echo "no_changes=true" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore: bump version to ${new_version} [skip ci]"
+            git push origin ":$branch" 2>/dev/null || true
             git push origin "$branch"
 
             pr_num=$(gh pr create \
