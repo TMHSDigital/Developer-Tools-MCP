@@ -1,0 +1,15 @@
+# Developer Tools MCP
+
+This is a mcp-server repository for Developer Tools MCP development.
+
+## Project structure
+
+- `src/` -- TypeScript source
+- `package.json` -- npm package manifest
+
+## Conventions
+
+- Use conventional commits (feat:, fix:, chore:, docs:)
+- Never manually edit the version -- CI handles it
+- Skills need YAML frontmatter: title, description, globs
+- Rules need frontmatter: description, globs, alwaysApply

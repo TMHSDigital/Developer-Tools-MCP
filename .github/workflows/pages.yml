@@ -1,0 +1,56 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "rules/**"
+      - "mcp-tools.json"
+      - "site.json"
+      - ".cursor-plugin/plugin.json"
+      - "assets/**"
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout site template
+        uses: actions/checkout@v4
+        with:
+          repository: TMHSDigital/Developer-Tools-Directory
+          sparse-checkout: site-template
+          path: _template
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install Jinja2
+
+      - name: Build site
+        run: python _template/site-template/build_site.py --repo-root . --out docs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+      - uses: actions/deploy-pages@v5
+        id: deployment
