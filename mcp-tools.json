@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "name": "devtools_getRegistry",
+    "description": "Return entries from the TMHSDigital developer-tools ecosystem registry. Optionally filter by type, status, or slug. Returns all entries when no filter is given.",
+    "category": "registry"
+  },
+  {
+    "name": "devtools_getFleetStatus",
+    "description": "List all tool repos in the ecosystem with their registry version, latest GitHub release tag, and a current/behind/ahead signal. Optionally include the standards-version from each repo's CLAUDE.md.",
+    "category": "fleet"
+  },
+  {
+    "name": "devtools_checkDrift",
+    "description": "Return drift findings across the ecosystem fleet: standards-version mismatches and missing required workflows. Drift policy is read from the meta-repo's standards/drift-checker.config.json at runtime.",
+    "category": "drift"
+  },
+  {
+    "name": "devtools_inspectRepo",
+    "description": "Return a detailed view of one ecosystem repo: GitHub metadata, open PR count, latest CI run statuses, and the standards-version from the repo's agent files.",
+    "category": "fleet"
+  }
+]
