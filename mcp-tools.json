@@ -18,5 +18,10 @@
     "name": "devtools_inspectRepo",
     "description": "Return a detailed view of one ecosystem repo: GitHub metadata, open PR count, latest CI run statuses, and the standards-version from the repo's agent files.",
     "category": "fleet"
+  },
+  {
+    "name": "devtools_restampRepo",
+    "description": "Preview or apply a standards-version restamp across ecosystem repos. Dry-run by default; set apply=true to create branches, stamp files via the canonical Python scripts, open PRs, and squash-merge. Requires DEVTOOLS_META_ROOT and GH_TOKEN.",
+    "category": "write"
   }
 ]
