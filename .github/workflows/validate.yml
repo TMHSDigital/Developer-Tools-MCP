@@ -10,19 +10,16 @@ permissions:
   contents: read
 
 jobs:
-
-  validate-mcp-server:
-    name: Validate MCP server
+  validate-typescript:
+    name: Validate TypeScript
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v6
         with:
-          python-version: "3.12"
+          node-version: 20
+          cache: npm
 
-      - name: Install dependencies
-        run: pip install -r mcp-server/requirements.txt
-
-      - name: Check Python syntax
-        run: python3 -m py_compile mcp-server/server.py
+      - run: npm ci
+      - run: npm run build

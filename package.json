@@ -1,0 +1,54 @@
+{
+  "name": "@tmhs/devtools-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing the TMHSDigital developer-tools ecosystem as agent-callable read tools.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "devtools-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "TMHSDigital",
+  "license": "CC-BY-NC-ND-4.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TMHSDigital/Developer-Tools-MCP.git"
+  },
+  "homepage": "https://github.com/TMHSDigital/Developer-Tools-MCP#readme",
+  "bugs": {
+    "url": "https://github.com/TMHSDigital/Developer-Tools-MCP/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "developer-tools",
+    "ecosystem",
+    "registry",
+    "cursor"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.2"
+  }
+}
