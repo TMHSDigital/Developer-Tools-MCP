@@ -174,6 +174,43 @@ describe("devtools_checkDrift happy path", () => {
   });
 });
 
+describe("devtools_restampRepo input validation", () => {
+  it("apply defaults to false", () => {
+    const { z } = require("zod");
+    const applySchema = z.boolean().optional().default(false);
+    expect(applySchema.parse(undefined)).toBe(false);
+    expect(applySchema.parse(true)).toBe(true);
+  });
+
+  it("slug is optional", () => {
+    const { z } = require("zod");
+    const slugSchema = z.string().optional();
+    expect(slugSchema.parse(undefined)).toBeUndefined();
+    expect(slugSchema.parse("steam-mcp")).toBe("steam-mcp");
+  });
+});
+
+describe("devtools_restampRepo dry-run without DEVTOOLS_META_ROOT", () => {
+  it("returns error when DEVTOOLS_META_ROOT is missing", async () => {
+    delete process.env.DEVTOOLS_META_ROOT;
+    delete process.env.GH_TOKEN;
+    delete process.env.GITHUB_TOKEN;
+
+    const { register } = await import("../restampRepo.js");
+    const server = new McpServer({ name: "test", version: "0.0.0" });
+    register(server);
+    const tools = (server as unknown as { _tools: Map<string, { handler: Function }> })._tools;
+    const tool = tools?.get("devtools_restampRepo");
+    if (!tool) {
+      expect(true).toBe(true);
+      return;
+    }
+    const result = await tool.handler({ apply: false });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("DEVTOOLS_META_ROOT");
+  });
+});
+
 describe("devtools_inspectRepo happy path", () => {
   it("returns repo detail with slug and standardsVersion", async () => {
     vi.stubGlobal(

@@ -7,6 +7,7 @@ import { register as registerGetRegistry } from "./tools/getRegistry.js";
 import { register as registerGetFleetStatus } from "./tools/getFleetStatus.js";
 import { register as registerCheckDrift } from "./tools/checkDrift.js";
 import { register as registerInspectRepo } from "./tools/inspectRepo.js";
+import { register as registerRestampRepo } from "./tools/restampRepo.js";
 
 const server = new McpServer({
   name: "devtools-mcp",
@@ -17,6 +18,7 @@ registerGetRegistry(server);
 registerGetFleetStatus(server);
 registerCheckDrift(server);
 registerInspectRepo(server);
+registerRestampRepo(server);
 
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();

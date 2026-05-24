@@ -131,3 +131,39 @@ export async function fetchStandardsVersion(): Promise<string> {
   const raw = await rawFetch(META_OWNER, META_REPO, "STANDARDS_VERSION");
   return raw.trim();
 }
+
+export async function githubWrite<T>(
+  path: string,
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
+  body?: unknown,
+): Promise<T> {
+  const token = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new GitHubError(
+      "GH_TOKEN or GITHUB_TOKEN is required for write operations",
+      401,
+      path,
+    );
+  }
+
+  const url = `https://api.github.com${path}`;
+  const opts: RequestInit = {
+    method,
+    headers: { ...buildHeaders(), "Content-Type": "application/json" },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+
+  const res = await fetch(url, opts);
+  if (res.status === 404) throw new NotFoundError(path);
+  if (res.status === 403 || res.status === 429) throw new RateLimitError();
+  if (res.status === 204) return {} as T;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new GitHubError(
+      `GitHub ${method} ${res.status} for ${path}: ${errText}`,
+      res.status,
+      path,
+    );
+  }
+  return res.json() as Promise<T>;
+}
