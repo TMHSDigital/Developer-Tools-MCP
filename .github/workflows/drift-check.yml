@@ -19,3 +19,4 @@ jobs:
         with:
           mode: self
           format: gh-summary
+          meta-repo-ref: v1.12
