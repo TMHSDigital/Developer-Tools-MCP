@@ -7,15 +7,14 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  version-and-release:
-    name: Bump version, tag, and release
+  tag-and-release:
+    name: Tag and release
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
@@ -25,181 +24,39 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get current version
-        id: current
+      - name: Read version from package.json
+        id: ver
         run: |
           version=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Current version: $version"
-
-      - name: Determine bump type from commits
-        id: bump
-        run: |
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$last_tag" ]; then
-            commits=$(git log --oneline --format="%s")
-          else
-            commits=$(git log "$last_tag"..HEAD --oneline --format="%s")
-          fi
-
-          echo "Commits since last release:"
-          echo "$commits"
-
-          bump="patch"
-          if echo "$commits" | grep -qiE "^(feat|feature)(\(.+\))?!:|BREAKING CHANGE"; then
-            bump="major"
-          elif echo "$commits" | grep -qiE "^(feat|feature)(\(.+\))?:"; then
-            bump="minor"
-          fi
-
-          echo "bump=$bump" >> "$GITHUB_OUTPUT"
-          echo "Bump type: $bump"
-
-      - name: Compute new version
-        id: new
-        run: |
-          current="${{ steps.current.outputs.version }}"
-          bump="${{ steps.bump.outputs.bump }}"
-
-          IFS='.' read -r major minor patch <<< "$current"
-
-          # Initial release: when there is no prior tag, hold version at the
-          # value already in the manifest. The first release is cut at the
-          # scaffolded version (typically 0.1.0) instead of bumping to 0.2.0
-          # on the first feat: commit. After the first tag exists, normal
-          # conventional-commit-driven bumping resumes.
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$last_tag" ]; then
-            new_version="$current"
-          else
-            case "$bump" in
-              major) major=$((major + 1)); minor=0; patch=0 ;;
-              minor) minor=$((minor + 1)); patch=0 ;;
-              patch) patch=$((patch + 1)) ;;
-            esac
-            new_version="$major.$minor.$patch"
-          fi
-
-          echo "version=$new_version" >> "$GITHUB_OUTPUT"
-          echo "New version: $new_version"
+          echo "Version from package.json: $version"
 
       - name: Check if tag already exists
         id: check
         run: |
-          new_version="${{ steps.new.outputs.version }}"
-          if git rev-parse "v$new_version" >/dev/null 2>&1; then
+          version="${{ steps.ver.outputs.version }}"
+          if git rev-parse "v$version" >/dev/null 2>&1; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Tag v$new_version already exists, skipping"
+            echo "Tag v$version already exists, skipping release"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Tag v$version does not exist, proceeding"
           fi
-
-      - name: Update version files
-        if: steps.check.outputs.skip == 'false'
-        env:
-          NEW_VERSION: ${{ steps.new.outputs.version }}
-          OLD_VERSION: ${{ steps.current.outputs.version }}
-        run: |
-          python3 -c "
-          import json, os
-
-          new_version = os.environ['NEW_VERSION']
-          old_version = os.environ['OLD_VERSION']
-
-          readme = 'README.md'
-          if os.path.exists(readme):
-              with open(readme) as f:
-                  content = f.read()
-              content = content.replace(
-                  f'version-{old_version}-blue',
-                  f'version-{new_version}-blue'
-              )
-              with open(readme, 'w') as f:
-                  f.write(content)
-
-          pkg = 'package.json'
-          if os.path.exists(pkg):
-              with open(pkg) as f:
-                  data = json.load(f)
-              data['version'] = new_version
-              with open(pkg, 'w') as f:
-                  json.dump(data, f, indent=2)
-                  f.write('\n')
-          "
-
-      - name: Commit version bump to branch and open PR
-        id: pr
-        if: steps.check.outputs.skip == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          new_version="${{ steps.new.outputs.version }}"
-          branch="chore/release-v${new_version}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git add -A
-
-          if git diff --cached --quiet; then
-            echo "No version file changes to commit"
-            echo "no_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "chore: bump version to ${new_version} [skip ci]"
-            git push origin ":$branch" 2>/dev/null || true
-            git push origin "$branch"
-
-            pr_url=$(gh pr create \
-              --base main \
-              --head "$branch" \
-              --title "chore: bump version to ${new_version} [skip ci]" \
-              --body "Automated version bump to ${new_version}.")
-            pr_num=$(echo "$pr_url" | grep -oE '[0-9]+$')
-
-            echo "pr_num=$pr_num" >> "$GITHUB_OUTPUT"
-            echo "branch=$branch" >> "$GITHUB_OUTPUT"
-            echo "no_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Opened PR #${pr_num} for version bump"
-
-            # Poll for required drift check (max 5 min)
-            for i in $(seq 1 30); do
-              sleep 10
-              state=$(gh pr view "$pr_num" \
-                --json statusCheckRollup \
-                --jq '[.statusCheckRollup[] | select(.name == "Ecosystem drift check")] | first | .conclusion // .status' \
-                2>/dev/null || echo "pending")
-              echo "Attempt $i: drift check state = $state"
-              if [ "$state" = "SUCCESS" ]; then
-                echo "Drift check passed"
-                break
-              elif [ "$state" = "FAILURE" ] || [ "$state" = "ERROR" ]; then
-                echo "::error::Drift check failed on version-bump PR #${pr_num}"
-                exit 1
-              fi
-            done
-
-            gh pr merge "$pr_num" --squash --delete-branch
-            echo "Merged PR #${pr_num}"
-          fi
-
-      - name: Sync local git to merged main
-        if: steps.check.outputs.skip == 'false' && steps.pr.outputs.no_changes != 'true'
-        run: |
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
 
       - name: Create and push tags
         if: steps.check.outputs.skip == 'false'
         run: |
-          new_version="${{ steps.new.outputs.version }}"
-          IFS='.' read -r major minor _patch <<< "$new_version"
+          version="${{ steps.ver.outputs.version }}"
+          IFS='.' read -r major minor _patch <<< "$version"
 
-          git tag "v$new_version"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "v$version"
           git tag -f "v$major"
           git tag -f "v$major.$minor"
 
-          git push origin "v$new_version"
+          git push origin "v$version"
           git push origin "v$major" --force
           git push origin "v$major.$minor" --force
 
@@ -208,6 +65,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v${{ steps.new.outputs.version }}" \
-            --title "v${{ steps.new.outputs.version }}" \
+          gh release create "v${{ steps.ver.outputs.version }}" \
+            --title "v${{ steps.ver.outputs.version }}" \
             --generate-notes
