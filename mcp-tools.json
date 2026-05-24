@@ -23,5 +23,15 @@
     "name": "devtools_restampRepo",
     "description": "Preview or apply a standards-version restamp across ecosystem repos. Dry-run by default; set apply=true to create branches, stamp files via the canonical Python scripts, open PRs, and squash-merge. Requires DEVTOOLS_META_ROOT and GH_TOKEN.",
     "category": "write"
+  },
+  {
+    "name": "devtools_syncRegistry",
+    "description": "Preview or apply registry.json field edits and regenerate derived artifacts (README, CLAUDE.md, docs/index.html). Update-only: rejects slugs not in registry.json. Dry-run by default. Requires DEVTOOLS_META_ROOT and GH_TOKEN for apply.",
+    "category": "write"
+  },
+  {
+    "name": "devtools_createTool",
+    "description": "Plan or execute creation of a new ecosystem tool repo. Dry-run validates inputs, runs scaffold, lists generated files, and reports the would-be registry entry and STANDARDS_VERSION. Apply creates a real public GitHub repo (IRREVERSIBLE; requires confirm=true and a token with repo-creation scope).",
+    "category": "write"
   }
 ]
