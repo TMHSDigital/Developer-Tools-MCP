@@ -124,23 +124,28 @@ function buildWouldBeEntry(
   description: string,
   license: string,
 ): Record<string, unknown> {
+  // Mirrors the canonical scaffold/generator.py build_registry_entry (the
+  // single source of truth a born repo's catalog entry must match). Keep in
+  // sync with that function. Intentionally has NO `version` field: per-tool
+  // versions were removed fleet-wide (DTD #73); the catalog tracks tools by
+  // repo and homepage, and re-introducing `version` re-stales on every
+  // content merge.
   return {
     name,
     repo: `${META_OWNER}/${slug}`,
     slug,
     description,
     type,
-    homepage: type === "mcp-server" ? "" : `https://${META_OWNER.toLowerCase()}.github.io/${slug}/`,
+    homepage: `https://${META_OWNER.toLowerCase()}.github.io/${slug}/`,
     skills: 0,
     rules: 0,
     mcpTools: 0,
     extras: {},
-    topics: [],
-    status: "experimental",
-    version: "0.1.0",
+    topics: [type, "developer-tools"],
+    status: "active",
     language: type === "mcp-server" ? "TypeScript" : "Python",
     license: license.toUpperCase(),
-    pagesType: type === "mcp-server" ? "none" : "static",
+    pagesType: "static",
     hasCI: true,
   };
 }
@@ -429,7 +434,7 @@ export function register(server: McpServer): void {
             // New file
           }
           const body: Record<string, unknown> = {
-            message: `feat: register ${slug} [skip ci]`,
+            message: `feat: register ${slug} [skip version]`,
             content: Buffer.from(content, "utf-8").toString("base64"),
             branch: branchName,
           };
