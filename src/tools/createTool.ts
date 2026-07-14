@@ -86,6 +86,11 @@ function runScaffold(
     "--description", description,
     "--license", license,
     "--output", outputDir,
+    // Registration is handled once, explicitly, in the apply path (STEP 5).
+    // Without this flag every scaffold run (dry-run pre-check included)
+    // writes the entry into the live local registry, and the second run
+    // trips the generator's duplicate-slug guard after `gh repo create`.
+    "--no-register",
   ];
   const result = spawnSync(PYTHON, args, { encoding: "utf-8", timeout: 30_000 });
   return { stdout: result.stdout ?? "", stderr: result.stderr ?? "", code: result.status ?? 2 };
