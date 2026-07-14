@@ -354,7 +354,10 @@ export function register(server: McpServer): void {
 
           // STEP 3: Bootstrap onto fresh repo main (direct push allowed before protection)
           const gitSteps = [
-            ["git", "init"],
+            // -b main: a bare `git init` uses the machine's init.defaultBranch
+            // (often master), and the later `git push -u origin main` then has
+            // nothing to push ("src refspec main does not match any").
+            ["git", "init", "-b", "main"],
             ["git", "add", "."],
             ["git", "commit", "-s", "-m", `chore: initial scaffold at standards-version ${standardsVersion}`],
             ["git", "remote", "add", "origin", `https://x-access-token:${ghToken}@github.com/${META_OWNER}/${slug}.git`],
